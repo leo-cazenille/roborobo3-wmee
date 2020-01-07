@@ -7,6 +7,7 @@
 #include "Config/TemplateMedeaConfigurationLoader.h"
 #include "Config/ForagingRegionsConfigurationLoader.h"
 #include "Config/TutorialConfigurationLoader.h"
+#include "Config/WMEEConfigurationLoader.h"
 //###DO-NOT-DELETE-THIS-LINE###TAG:INCLUDE###//
 
 
@@ -72,6 +73,12 @@ ConfigurationLoader* ConfigurationLoader::make_ConfigurationLoader (std::string 
 	else if (configurationLoaderObjectName == "TutorialConfigurationLoader" )
 	{
 		return new TutorialConfigurationLoader();
+	}
+#endif
+#if defined PRJ_WMEE || !defined MODULAR
+	else if (configurationLoaderObjectName == "WMEEConfigurationLoader" )
+	{
+		return new WMEEConfigurationLoader();
 	}
 #endif
     //###DO-NOT-DELETE-THIS-LINE###TAG:SWITCH###//

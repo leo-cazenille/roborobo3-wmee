@@ -36,7 +36,7 @@ protected:
     std::vector<int> _nbBiasNeuronsPerLayer;
     NeuralNetwork* nn;
     
-    void createNN();
+    virtual void createNN();
     
     //bool _isAlive; // agent stand still if not.
     bool _isNewGenome;

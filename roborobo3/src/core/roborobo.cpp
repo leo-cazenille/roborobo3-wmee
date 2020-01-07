@@ -1951,7 +1951,9 @@ bool loadProperties( std::string __propertiesFilename )
         }
     }
     else
+    {
         std::cout << "[INFO] gVerbose value set as command-line paramater.\n";
+    }
     
 	s = gProperties.getProperty("gPhysicalObjectDefaultRelocate");
 	if ( s == "true" || s == "True" || s == "TRUE" )

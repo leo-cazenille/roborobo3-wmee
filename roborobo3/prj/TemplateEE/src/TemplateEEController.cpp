@@ -406,7 +406,7 @@ void TemplateEEController::stepController()
     nn->setWeights(_parameters); // set-up NN
     
     std::vector<double> inputs = getInputs(); // Build list of inputs (check properties file for extended/non-extended input values
-    
+
     nn->setInputs(inputs);
     
     switch ( TemplateEESharedData::gControllerType )
