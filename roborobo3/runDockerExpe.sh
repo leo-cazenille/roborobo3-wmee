@@ -34,7 +34,7 @@ fi
 
 if [ "$executionMode" = "normal" ]; then
     #exec $dockerCMD run -i -m $memoryLimit --rm $priorityParam -v $resultsPath:$resultsPathInContainer $confVolParam $imageName  "$uid" "normal" "-c $configFile --runs $nbRuns"
-    exec $dockerCMD run -i -m $memoryLimit --rm $priorityParam --mount type=tmpfs,tmpfs-size=8589934592,target=$resultsPathInContainer --mount type=bind,source=$finalresultsPath,target=$finalresultsPathInContainer  $confVolParam $imageName  "$uid" "normal" "$nbRuns" "-c $configFile"
+    exec $dockerCMD run -i -m $memoryLimit --rm $priorityParam --mount type=tmpfs,tmpfs-size=8589934592,target=$resultsPathInContainer --mount type=bind,source=$finalresultsPath,target=$finalresultsPathInContainer  $confVolParam $imageName  "$uid" "normal" "$nbRuns" "$configFile"
 fi
 
 # MODELINE	"{{{1
