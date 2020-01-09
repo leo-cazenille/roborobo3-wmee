@@ -24,12 +24,15 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 RUN \
-    hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && ../configure --prefix=/usr && make -j 20 && make install && cd ../.. \
-    hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./configure --prefix=/usr && make -j 20 && make install && cd .. \
+    hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && ../configure --prefix=/usr && make -j 20 && make install && cd ../..
+
+RUN \
+    hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./configure --prefix=/usr && make -j 20 && make install && cd ..
+
+RUN \
     wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
     unzip -d /home/user/wmee/roborobo3/ libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
     rm -fr libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip
-
 
 
 RUN \
