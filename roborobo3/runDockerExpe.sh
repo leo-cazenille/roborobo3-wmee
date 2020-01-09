@@ -10,8 +10,8 @@ finalresultsPath=$(pwd)/results
 finalresultsPathInContainer=/home/user/finalresults
 imageName=${4:-"localhost:5000/wmee"}
 uid=$(id -u)
-confPath=$(pwd)/conf
-confPathInContainer=/home/user/wmee/conf
+confPath=$(pwd)/config
+confPathInContainer=/home/user/wmee/roborobo3/config
 priorityParam="-c 128"
 
 if [ ! -d $finalresultsPath ]; then
