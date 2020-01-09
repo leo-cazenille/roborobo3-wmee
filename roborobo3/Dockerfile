@@ -21,7 +21,7 @@ RUN \
     apt-get upgrade -y && \
 #    apt-get install -yq wget unzip caffe-cpu libeigen3-dev libsdl2-2.0 libsdl2-dev libsdl2-image-dev libboost-all-dev automake && \
     apt-get install -yq wget unzip libeigen3-dev libboost-all-dev automake mercurial cmake libsdl2-2.0 libsdl2-dev libsdl2-image-dev && \
-    apt-get purge libsdl2-2.0 libsdl2-dev libsdl2-image-dev && \
+    apt-get purge -yq libsdl2-2.0 libsdl2-dev libsdl2-image-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN \
