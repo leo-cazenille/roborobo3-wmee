@@ -3,8 +3,7 @@
 
 declare -a configs
 
-# TODO
-#configs+=("conf/rastrigin2vs6-noiseless-MutPolyBounded0.1x0.9-Grid64x64.yaml 2")
+configs+=("wmee-100400-baseline 50")
 
 
 printf -v allParams "%s\n" "${configs[@]}"
