@@ -20,11 +20,11 @@ RUN \
     DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get upgrade -y && \
 #    apt-get install -yq wget unzip caffe-cpu libeigen3-dev libsdl2-2.0 libsdl2-dev libsdl2-image-dev libboost-all-dev automake && \
-    apt-get install -yq wget unzip libeigen3-dev libboost-all-dev automake mercurial && \
+    apt-get install -yq wget unzip libeigen3-dev libboost-all-dev automake mercurial cmake libsdl2-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN \
-    hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && ../configure --prefix=/usr && make -j 20 && make install && cd ../..
+    hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && cmake -DVIDEO_OFFSCREEN=ON -DCMAKE_INSTALL_PREFIX=/usr .. && make -j 20 && make DESTDIR=/usr install && cd ../..
 
 RUN \
     hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./configure --prefix=/usr && make -j 20 && make install && cd ..
