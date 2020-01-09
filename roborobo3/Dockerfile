@@ -45,7 +45,7 @@ RUN \
 
 # Prepare for entrypoint execution
 #CMD ["bash"]
-ENTRYPOINT ["/home/user/wmee/entrypoint.sh"]
+ENTRYPOINT ["/home/user/wmee/roborobo3/entrypoint.sh"]
 
 # MODELINE	"{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
