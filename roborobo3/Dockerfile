@@ -28,7 +28,7 @@ RUN \
     hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && cmake -DVIDEO_OFFSCREEN=ON -DCMAKE_INSTALL_PREFIX=/usr .. && make -j 20 && make DESTDIR=/usr install && cd ../..
 
 RUN \
-    hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./configure --prefix=/usr && make -j 20 && make install && cd ..
+    hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./autogen.sh; ./configure --prefix=/usr && make -j 20 && make install && cd ..
 
 RUN \
     wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
