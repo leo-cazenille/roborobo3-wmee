@@ -10,8 +10,8 @@ MODULES = TemplateEE TemplateVanillaEE  WMEE
 # ### ### ### ### ### ### ###
 
 CC           = g++ 
-CCFLAGS      = -Wall -O3 -std=c++14 -D_GLIBCXX_USE_CXX11_ABI=0
-LDFLAGS      = `sdl2-config --cflags --libs` -Llibtorch/lib -Wl,-rpath,libtorch/lib libtorch/lib/libtorch.so libtorch/lib/libc10.so  -lpthread -Wl,--no-as-needed,libtorch/lib/libtorch.so -Wl,--as-needed -ltorch -lc10 -D_GLIBCXX_USE_CXX11_ABI=0
+CCFLAGS      = -Wall -O3 -std=c++14 -D_GLIBCXX_USE_CXX11_ABI=0 -DAT_PARALLEL_OPENMP=1 -isystem libtorch/include -isystem libtorch/include/torch/csrc/api/include
+LDFLAGS      = `sdl2-config --cflags --libs` -Llibtorch/lib -Wl,-rpath,libtorch/lib libtorch/lib/libtorch.so libtorch/lib/libc10.so  -lpthread -Wl,--no-as-needed,libtorch/lib/libtorch.so -Wl,--as-needed -ltorch -lc10 -D_GLIBCXX_USE_CXX11_ABI=0 -rdynamic
 LIBS      = 
 RM           = rm -f 
 MAKE         = make 

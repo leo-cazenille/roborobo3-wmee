@@ -1,4 +1,4 @@
-FROM lcazenille/ubuntupyssh:latest
+FROM lcazenille/ubuntupysshgcc:latest
 MAINTAINER leo.cazenille@gmail.com
 
 
@@ -15,14 +15,26 @@ RUN \
     git clone https://github.com/leo-cazenille/roborobo3-wmee.git /home/user/wmee && \
     rm -fr /home/user/wmee/.git*
 
+# TODO caffe-cpu gcc-8 ? torch ? SDL dependencies
 RUN \
     DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -yq wget unzip && \
-    rm -rf /var/lib/apt/lists/* && \
-    wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip && \
-    unzip -d /home/user/wmee/roborobo3/ libtorch-shared-with-deps-latest.zip && \
-    rm -fr libtorch-shared-with-deps-latest.zip
+#    apt-get install -yq wget unzip caffe-cpu libeigen3-dev libsdl2-2.0 libsdl2-dev libsdl2-image-dev libboost-all-dev automake && \
+    apt-get install -yq wget unzip libeigen3-dev libboost-all-dev automake mercurial && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN \
+    hg clone https://hg.libsdl.org/SDL && cd SDL && mkdir build && cd build && ../configure --prefix=/usr && make -j 20 && make install && cd ../.. \
+    hg clone http://hg.libsdl.org/SDL_image && cd SDL_image && autoreconf -f -i; ./configure --prefix=/usr && make -j 20 && make install && cd .. \
+    wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
+    unzip -d /home/user/wmee/roborobo3/ libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
+    rm -fr libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip
+
+
+
+RUN \
+    cd /home/user/wmee/roborobo3 && \
+    make clean; make -j 24
 
 
 
