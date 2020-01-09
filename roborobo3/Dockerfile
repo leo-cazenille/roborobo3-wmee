@@ -44,8 +44,8 @@ RUN \
 #RUN pip3 install --upgrade --no-cache-dir -r /home/user/wmee/requirements.txt
 
 # Prepare for entrypoint execution
-CMD ["bash"]
-#ENTRYPOINT ["/home/user/wmee/entrypoint.sh"]
+#CMD ["bash"]
+ENTRYPOINT ["/home/user/wmee/entrypoint.sh"]
 
 # MODELINE	"{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
