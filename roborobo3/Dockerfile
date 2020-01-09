@@ -32,7 +32,7 @@ RUN \
 RUN \
     wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
     unzip -d /home/user/wmee/roborobo3/ libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip && \
-    rm -fr libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip
+    rm -fr libtorch-cxx11-abi-shared-with-deps-1.3.1+cpu.zip
 
 
 RUN \
