@@ -28,6 +28,7 @@ WMEEWorldObserver::WMEEWorldObserver( World* world ) : TemplateEEWorldObserver( 
     gProperties.checkAndGetPropertyValue("rebirthDelay",&WMEESharedData::rebirthDelay,false);
     gProperties.checkAndGetPropertyValue("dataBaseMaxCapacity",&WMEESharedData::dataBaseMaxCapacity,true);
     gProperties.checkAndGetPropertyValue("maxStoredVisualModels",&WMEESharedData::maxStoredVisualModels,true);
+    gProperties.checkAndGetPropertyValue("learningRate",&WMEESharedData::learningRate,true);
     gProperties.checkAndGetPropertyValue("phase2AfterIt",&WMEESharedData::phase2AfterIt,true);
     gProperties.checkAndGetPropertyValue("phase2ControllerType",&WMEESharedData::phase2ControllerType,true);
     gProperties.checkAndGetPropertyValue("aeHDim",&WMEESharedData::aeHDim,true);

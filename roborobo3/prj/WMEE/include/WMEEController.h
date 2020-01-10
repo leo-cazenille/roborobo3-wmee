@@ -25,10 +25,11 @@ protected:
     int _rebirthDelay;
 
     std::shared_ptr<AE> _visual_nn = nullptr;
-    std::vector<decltype(_visual_nn)> _vec_visual_nn;
+    //std::vector<decltype(_visual_nn)> _vec_visual_nn;
+    std::map< std::pair<int,int>, decltype(_visual_nn)> _vec_visual_nn;
     torch::Tensor _data;
     size_t _dataIdx = 0;
-    //std::unique_ptr<torch::optim::Adam> _optimizer = nullptr;
+    std::unique_ptr<torch::optim::Adam> _optimizer = nullptr;
 
 private:
     std::map< std::pair<int,int>, int > _regretValueList;

@@ -11,12 +11,15 @@
 #include "WMEE/include/autoencoder.h"
 #include "WMEE/include/mlp.h"
 
+#include <torch/torch.h>
+
 
 struct WMEEPacket : public Packet
 {
     int regret = 0;
 
     std::shared_ptr<AE> visual_nn = nullptr;
+//    std::shared_ptr<torch::optim::Adam> optim_visual_nn = nullptr;
 
     WMEEPacket() : Packet()
     {

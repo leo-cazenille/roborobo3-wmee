@@ -3,7 +3,9 @@
 
 declare -a configs
 
-configs+=("wmee-3201600-baseline 50")
+#configs+=("wmee-3201600-baseline 50")
+
+configs+=("wmee-3201600-WMAE4000x10x1e-4x30x10x1067200 50")
 
 
 printf -v allParams "%s\n" "${configs[@]}"

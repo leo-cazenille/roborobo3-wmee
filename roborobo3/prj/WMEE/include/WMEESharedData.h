@@ -27,6 +27,7 @@ public:
 
     static int dataBaseMaxCapacity;
     static int maxStoredVisualModels;
+    static double learningRate;
 
     static int phase2AfterIt;
     static int phase2ControllerType;

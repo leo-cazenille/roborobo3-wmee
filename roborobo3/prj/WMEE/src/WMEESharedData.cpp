@@ -26,6 +26,7 @@ int WMEESharedData::rebirthDelay = 0;
 
 int WMEESharedData::dataBaseMaxCapacity = 0;
 int WMEESharedData::maxStoredVisualModels = 0;
+double WMEESharedData::learningRate = 1e-3;
 
 int WMEESharedData::phase2AfterIt = 0;
 int WMEESharedData::phase2ControllerType = 0;

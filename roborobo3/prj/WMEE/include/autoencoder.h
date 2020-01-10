@@ -2,6 +2,7 @@
 
 #include <torch/torch.h>
 #include <utility>
+#include <memory>
 
 struct AEOutput {
     torch::Tensor reconstruction;
@@ -11,9 +12,12 @@ struct AEOutput {
 
 class AEImpl : public torch::nn::Module {
     public:
-        AEImpl(int64_t image_size, int64_t h_dim, int64_t z_dim);
+        AEImpl(int64_t image_size, int64_t h_dim, int64_t z_dim, double learning_rate);
         torch::Tensor decode(torch::Tensor z);
         AEOutput forward(torch::Tensor x);
+
+        std::shared_ptr<torch::optim::Optimizer> optim = nullptr; // XXX
+
     private:
         torch::Tensor encode(torch::Tensor x);
         //std::pair<torch::Tensor, torch::Tensor> encode(torch::Tensor x);
