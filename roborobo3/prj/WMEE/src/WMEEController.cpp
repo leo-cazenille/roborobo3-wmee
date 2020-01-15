@@ -439,7 +439,7 @@ void WMEEController::stepEvolution()
         //std::cout << "DEBUG best_idx: " << best_idx << std::endl;
         //_visual_nn = _vec_visual_nn[best_idx];
         _visual_nn = _vec_visual_nn[best_it->first];
-        std::cout << "DEBUG best_idx: " << best_it->first << ": " << best_it->second << std::endl;
+        //std::cout << "DEBUG best_idx: " << best_it->first << ": " << best_it->second << std::endl;
 
         // Get rid of the other WM NNs
         _vec_visual_nn.clear();
