@@ -25,11 +25,22 @@ int WMEESharedData::gControllerType = 0;
 int WMEESharedData::rebirthDelay = 0;
 
 int WMEESharedData::dataBaseMaxCapacity = 0;
+int WMEESharedData::dataMemNbSequences = 0;
 int WMEESharedData::maxStoredVisualModels = 0;
+int WMEESharedData::maxStoredMemoryModels = 0;
 double WMEESharedData::learningRate = 1e-3;
+double WMEESharedData::learningRateMDNLSTM = 1e-3;
 
 int WMEESharedData::phase2AfterIt = 0;
 int WMEESharedData::phase2ControllerType = 0;
+int WMEESharedData::phase3AfterIt = 0;
+int WMEESharedData::phase3ControllerType = 0;
 int WMEESharedData::aeHDim = 0;
 int WMEESharedData::aeZDim = 0;
+int WMEESharedData::mdnlstmHDim = 0;
+//int WMEESharedData::mdnlstmZDim = 0;
+int WMEESharedData::mdnlstmNbSamples = 0;
+int WMEESharedData::mdnlstmHiddenDim = 0;
+int WMEESharedData::mdnlstmNbLayers = 0;
+double WMEESharedData::mdnlstmTemperature = 0;
 

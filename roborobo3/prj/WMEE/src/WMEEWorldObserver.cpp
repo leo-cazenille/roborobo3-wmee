@@ -27,12 +27,21 @@ WMEEWorldObserver::WMEEWorldObserver( World* world ) : TemplateEEWorldObserver( 
     gProperties.checkAndGetPropertyValue("gControllerType",&WMEESharedData::gControllerType,true);
     gProperties.checkAndGetPropertyValue("rebirthDelay",&WMEESharedData::rebirthDelay,false);
     gProperties.checkAndGetPropertyValue("dataBaseMaxCapacity",&WMEESharedData::dataBaseMaxCapacity,true);
+    gProperties.checkAndGetPropertyValue("dataMemNbSequences",&WMEESharedData::dataMemNbSequences,true);
     gProperties.checkAndGetPropertyValue("maxStoredVisualModels",&WMEESharedData::maxStoredVisualModels,true);
     gProperties.checkAndGetPropertyValue("learningRate",&WMEESharedData::learningRate,true);
+    gProperties.checkAndGetPropertyValue("learningRateMDNLSTM",&WMEESharedData::learningRateMDNLSTM,true);
     gProperties.checkAndGetPropertyValue("phase2AfterIt",&WMEESharedData::phase2AfterIt,true);
     gProperties.checkAndGetPropertyValue("phase2ControllerType",&WMEESharedData::phase2ControllerType,true);
+    gProperties.checkAndGetPropertyValue("phase3AfterIt",&WMEESharedData::phase3AfterIt,true);
+    gProperties.checkAndGetPropertyValue("phase3ControllerType",&WMEESharedData::phase3ControllerType,true);
     gProperties.checkAndGetPropertyValue("aeHDim",&WMEESharedData::aeHDim,true);
     gProperties.checkAndGetPropertyValue("aeZDim",&WMEESharedData::aeZDim,true);
+    gProperties.checkAndGetPropertyValue("mdnlstmHDim",&WMEESharedData::mdnlstmHDim,true);
+    gProperties.checkAndGetPropertyValue("mdnlstmNbSamples",&WMEESharedData::mdnlstmNbSamples,true);
+    gProperties.checkAndGetPropertyValue("mdnlstmHiddenDim",&WMEESharedData::mdnlstmHiddenDim,true);
+    gProperties.checkAndGetPropertyValue("mdnlstmNbLayers",&WMEESharedData::mdnlstmNbLayers,true);
+    gProperties.checkAndGetPropertyValue("mdnlstmTemperature",&WMEESharedData::mdnlstmTemperature,true);
     
     gLitelogManager->write("# lite logger\n");
     gLitelogManager->write("# [0]:generation,[1]:iteration,[2]:populationSize,[3]:minFitness,[4]:maxFitness,[5]:avgFitnessNormalized,[6]:sumOfFitnesses,[7]:foragingBalance,[8]:avg_countForagedItemType0,[9]:stddev_countForagedItemType0, [10]:avg_countForagedItemType1,[11]:stddev_countForagedItemType1,[12]:globalWelfare,[13]minGenomeReservoirSize,[14]maxGenomeReservoirSize,[15]avgGenomeReservoirSize,[16]avgForagingBalancePerRobot,[17]stdForagingBalancePerRobot,[18]activeCountWithForaging.\n");

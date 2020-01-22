@@ -26,13 +26,24 @@ public:
     static int rebirthDelay;
 
     static int dataBaseMaxCapacity;
+    static int dataMemNbSequences;
     static int maxStoredVisualModels;
+    static int maxStoredMemoryModels;
     static double learningRate;
+    static double learningRateMDNLSTM;
 
     static int phase2AfterIt;
     static int phase2ControllerType;
+    static int phase3AfterIt;
+    static int phase3ControllerType;
     static int aeHDim;
     static int aeZDim;
+    static int mdnlstmHDim;
+    //static int mdnlstmZDim;
+    static int mdnlstmNbSamples;
+    static int mdnlstmHiddenDim;
+    static int mdnlstmNbLayers;
+    static double mdnlstmTemperature;
 }; 
 
 #endif

@@ -23,6 +23,8 @@ WMEEController::WMEEController( RobotWorldModel *wm ) : TemplateEEController( wm
 {
     //_data.resize(WMEESharedData::dataBaseMaxCapacity);
     _data = torch::zeros({WMEESharedData::dataBaseMaxCapacity, _nbInputs});
+    _data_mem = torch::zeros({WMEESharedData::dataBaseMaxCapacity, WMEESharedData::dataMemNbSequences, WMEESharedData::aeZDim + _nbOutputs}); // XXX
+    //_last_data_mem = torch::zeros({WMEESharedData::dataMemNbSequences, WMEESharedData::aeZDim + _nbOutputs}); // XXX
 
     // superclass constructor called before this baseclass constructor.
     resetFitness(); // superconstructor calls parent method.
@@ -41,6 +43,7 @@ WMEEController::~WMEEController()
     delete [] lastSeenObjectIdPerSensorList;
 
     _visual_nn.reset();
+    _memory_nn.reset();
 }
 
 
@@ -50,8 +53,13 @@ void WMEEController::step() // handles control decision and evolution (but: actu
 
     // Update controller type, if necessary
     if (WMEESharedData::phase2AfterIt == _iteration) {
-        //std::cout << "PHASE CHANGE !!" << std::endl;
+        std::cout << "PHASE CHANGE 1->2 !!" << std::endl;
         WMEESharedData::gControllerType = WMEESharedData::phase2ControllerType;
+        createNN();
+    }
+    if (WMEESharedData::phase3AfterIt == _iteration) {
+        std::cout << "PHASE CHANGE 2->3 !!" << std::endl;
+        WMEESharedData::gControllerType = WMEESharedData::phase3ControllerType;
         createNN();
     }
 
@@ -136,7 +144,8 @@ void WMEEController::stepController()
     
     std::vector<double> inputs = getInputs(); // Build list of inputs (check properties file for extended/non-extended input values
 
-    auto idx = _dataIdx % (size_t)WMEESharedData::dataBaseMaxCapacity;
+    // Update vision model database
+    auto idx = _data_idx % (size_t)WMEESharedData::dataBaseMaxCapacity;
     auto data_access = _data.accessor<float,2>();
     for(int j = 0; j < data_access.size(1); ++j) {
         if(isnormal(inputs[j]))
@@ -144,12 +153,17 @@ void WMEEController::stepController()
         else
             data_access[idx][j] = 0.0;
     }
-    ++_dataIdx;
+    ++_data_idx;
+
+    std::vector<double> vec_mem;
 
     switch ( WMEESharedData::gControllerType )
     {
         case 4: // AE+MLP
         {
+            torch::NoGradGuard no_grad;
+            _visual_nn->get()->eval();
+
             // Compute visual model
             //torch::Tensor tensor_inputs = torch::from_blob(inputs.data(), {(long)inputs.size()}); // XXX
             auto tensor_inputs = torch::empty({(long)inputs.size()});
@@ -169,12 +183,73 @@ void WMEEController::stepController()
             for(size_t i=0; i<z_size; ++i) {
                 z.push_back(p[i]);
             }
+            vec_mem = z;
             //std::cout << "Z: " << z << std::endl;
             //std::vector<double> z(z_tensor.data<double>());
 
-            //// TODO : compute Vision and memory models, use their outputs as inputs of ``nn``
             nn->setInputs(z);
         }
+
+        // TODO memory model
+        case 5: // MDNLSTM+AE+MLP
+        {
+            torch::NoGradGuard no_grad;
+            _visual_nn->get()->eval();
+            _memory_nn->get()->eval();
+
+            // Compute visual model
+            //torch::Tensor tensor_inputs = torch::from_blob(inputs.data(), {(long)inputs.size()}); // XXX
+            auto tensor_inputs = torch::empty({(long)inputs.size()});
+            auto tensor_inputs_access = tensor_inputs.accessor<float,1>();
+            for(int j = 0; j < tensor_inputs_access.size(0); ++j) {
+                if(isnormal(inputs[j]))
+                    tensor_inputs_access[j] = (1.0 + inputs[j]) / 2.0; // Normalization from [-1, 1] to [0, 1]
+                else
+                    tensor_inputs_access[j] = 0.0;
+            }
+            auto vision_nn_output = _visual_nn->get()->forward(tensor_inputs);
+            auto z_tensor = vision_nn_output.z;
+
+            std::vector<double> z;
+            size_t z_size = z_tensor.numel();
+            auto p = static_cast<float*>(z_tensor.storage().data());
+            for(size_t i=0; i<z_size; ++i) {
+                z.push_back(p[i]);
+            }
+            vec_mem = z;
+            //std::cout << "Z: " << z << std::endl;
+            //std::vector<double> z(z_tensor.data<double>());
+
+            // Reset the hidden state of the LSTM every nb_sequences iterations
+            if(_iteration % WMEESharedData::dataMemNbSequences == 0) {
+                _memory_nn->get()->reset_hidden();
+            }
+
+            auto lstm_tensor_inputs = torch::empty({1, (long)z.size() + _nbOutputs});
+            auto lstm_tensor_inputs_access = lstm_tensor_inputs.accessor<float,2>();
+            for(size_t j = 0; j < z.size(); ++j) {
+                if(isnormal(z[j]))
+                    lstm_tensor_inputs_access[0][j] = z[j];
+                else
+                    lstm_tensor_inputs_access[0][j] = 0.0;
+            }
+            for(size_t j = 0; j < _nbOutputs; ++j) {
+                if(isnormal(_last_outputs[j]))
+                    lstm_tensor_inputs_access[0][j] = _last_outputs[j];
+                else
+                    lstm_tensor_inputs_access[0][j] = 0.0;
+            }
+            auto memory_nn_output = _memory_nn->get()->forward(lstm_tensor_inputs);
+            auto lstm_hidden = _memory_nn->get()->get_hidden();
+            size_t lstm_hidden_size = lstm_hidden.numel();
+            auto p2 = static_cast<float*>(lstm_hidden.storage().data());
+            for(size_t i=0; i<lstm_hidden_size; ++i) {
+                z.push_back(p2[i]);
+            }
+
+            nn->setInputs(z);
+        }
+
 		default:
             nn->setInputs(inputs);
     }
@@ -192,6 +267,33 @@ void WMEEController::stepController()
 	}
     
     std::vector<double> outputs = nn->readOut();
+    _last_outputs = outputs;
+
+
+    if(vec_mem.size() > 0) {
+        // Update last entry of memory database
+        for(size_t i=0; i<outputs.size(); ++i) {
+            vec_mem.push_back(outputs[i]);
+        }
+        _last_data_mem.push_back(vec_mem);
+        if(_last_data_mem.size() >= (size_t)WMEESharedData::dataMemNbSequences)
+            _last_data_mem.pop_front();
+
+        // NOTE Really not optimized !
+        // Update memory model database
+        auto midx = _data_mem_idx % (size_t)WMEESharedData::dataBaseMaxCapacity;
+        auto data_mem_access = _data_mem.accessor<float,3>();
+        for(size_t j = 0; j < (size_t)data_mem_access.size(1); ++j) {
+            for(size_t k = 0; k < (size_t)data_mem_access.size(2); ++k) {
+                if(_last_data_mem.size() > j && isnormal(_last_data_mem[j][k]))
+                    data_mem_access[midx][j][k] = (1.0 + _last_data_mem[j][k]) / 2.0; // Normalization from [-1, 1] to [0, 1]
+                else
+                    data_mem_access[midx][j][k] = 0.0;
+            }
+        }
+        ++_data_mem_idx;
+    }
+
     
     // std::cout << "[DEBUG] Neural Network :" << nn->toString() << " of size=" << nn->getRequiredNumberOfWeights() << std::endl;
    
@@ -407,11 +509,23 @@ void WMEEController::trainAE()
 //}
 
 
+
+double WMEEController::testMM(std::shared_ptr<MDNLSTM> lstm) {
+    // TODO
+    return 0.;
+}
+
+void WMEEController::trainMM() {
+    // TODO
+}
+
+
+
 void WMEEController::stepEvolution()
 {
     TemplateEEController::stepEvolution();
 
-    if( _dataIdx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
+    if( _data_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
         // Add own WM NN to _vec_visual_nn
         //std::cout << "DEBUG stepEvolution _vec_visual_nn.size()=" << _vec_visual_nn.size() << std::endl;
         if (_vec_visual_nn.size() == 0) {
@@ -447,6 +561,32 @@ void WMEEController::stepEvolution()
         // Perform training of the world model NNs
         trainAE();
     }
+
+    if( _data_mem_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
+        // Add own WM NN to _vec_memory_nn
+        //std::cout << "DEBUG stepEvolution _vec_memory_nn.size()=" << _vec_memory_nn.size() << std::endl;
+        if (_vec_memory_nn.size() == 0) {
+            _vec_memory_nn[std::make_pair(_wm->getId(), _birthdate)] = _memory_nn;
+        }
+
+        // Assess the performance of every stored world model NNs
+        std::map< std::pair<int,int>, double > ae_losses;
+        for(auto pae : _vec_memory_nn) {
+            ae_losses[pae.first] = testMM(pae.second);
+        }
+        //std::cout << "DEBUG losses:" << ae_losses << std::endl;
+
+        // Select the best-performing WM NNs
+        auto const best_it = std::min_element(ae_losses.begin(), ae_losses.end(), [](auto const& l, auto const& r) { return l.second < r.second; });
+        _memory_nn = _vec_memory_nn[best_it->first];
+
+        // Get rid of the other WM NNs
+        _vec_memory_nn.clear();
+
+        // Perform training of the world model NNs
+        trainMM();
+    }
+
 }
 
 void WMEEController::initEvolution()
@@ -528,7 +668,6 @@ void WMEEController::broadcastGenome()
     TemplateEEController::broadcastGenome();
 }
 
-// TODO handle vision and memory models
 double WMEEController::getFitness()
 {
     switch ( WMEESharedData::fitnessFunction )
@@ -576,7 +715,6 @@ void WMEEController::logCurrentState()
 }
 
 
-// TODO handle vision and memory models
 bool WMEEController::sendGenome( TemplateEEController* __targetRobotController )
 {
     WMEEPacket* p = new WMEEPacket();
@@ -586,6 +724,7 @@ bool WMEEController::sendGenome( TemplateEEController* __targetRobotController )
     p->sigma = _currentSigma;
     p->regret = this->regret;
     p->visual_nn = this->_visual_nn;
+    p->memory_nn = this->_memory_nn;
     
     bool retValue = ((WMEEController*)__targetRobotController)->receiveGenome(p);
 
@@ -595,7 +734,6 @@ bool WMEEController::sendGenome( TemplateEEController* __targetRobotController )
 }
 
 
-// TODO handle vision and memory models
 bool WMEEController::receiveGenome( Packet* p )
 {
     WMEEPacket* p2 = static_cast<WMEEPacket*>(p);
@@ -609,6 +747,10 @@ bool WMEEController::receiveGenome( Packet* p )
         _vec_visual_nn[p2->senderId] = p2->visual_nn; // XXX
         ////_vec_visual_nn.push_back(p2->visual_nn);
         ////std::cout << "#" << _vec_visual_nn.size() << std::endl;
+    }
+
+    if (_vec_memory_nn.size() < (size_t)WMEESharedData::maxStoredMemoryModels) {
+        _vec_memory_nn[p2->senderId] = p2->memory_nn; // XXX
     }
     
     if ( it == _genomesList.end() ) // this exact agent's genome is already stored. Exact means: same robot, same generation. Then: update fitness value (the rest in unchanged)
@@ -624,7 +766,6 @@ bool WMEEController::receiveGenome( Packet* p )
 }
 
 
-// TODO ADD autoencoder; Vision and memory models
 void WMEEController::createNN()
 {
     setIOcontrollerSize(); // compute #inputs and #outputs
@@ -632,8 +773,15 @@ void WMEEController::createNN()
     if ( nn != NULL ) // useless: delete will anyway check if nn is NULL or not.
         delete nn;
 
+    // Create Visual Model
     _visual_nn = std::make_shared<AE>(_nbInputs, (size_t)WMEESharedData::aeHDim, (size_t)WMEESharedData::aeZDim, WMEESharedData::learningRate);
     //torch::Device device(torch::kCPU);
+    _visual_nn->get()->to(torch::kCPU);
+    _visual_nn->get()->train();
+
+    // TODO
+    // Create Memory Model
+    _memory_nn = std::make_shared<MDNLSTM>(WMEESharedData::dataMemNbSequences, WMEESharedData::mdnlstmHDim, WMEESharedData::aeZDim, _nbOutputs, WMEESharedData::mdnlstmNbLayers, WMEESharedData::mdnlstmNbSamples, WMEESharedData::mdnlstmHiddenDim, WMEESharedData::mdnlstmTemperature, WMEESharedData::learningRateMDNLSTM);
     _visual_nn->get()->to(torch::kCPU);
     _visual_nn->get()->train();
     
@@ -680,6 +828,14 @@ void WMEEController::createNN()
             nn = new MLP(_parameters, (size_t)WMEESharedData::aeZDim, _nbOutputs, *(_nbNeuronsPerHiddenLayer));
             break;
         }
+        case 5:
+        {
+            // TODO
+            // MDNLSTM + AE + MLP
+            nn = new MLP(_parameters, (size_t)WMEESharedData::aeZDim + (size_t)WMEESharedData::mdnlstmHDim, _nbOutputs, *(_nbNeuronsPerHiddenLayer));
+            break;
+        }
+
         default: // default: no controller
             std::cerr << "[ERROR] gController type unknown (value: " << WMEESharedData::gControllerType << ").\n";
             exit(-1);

@@ -12,6 +12,7 @@
 #include "WMEE/include/WMEEPacket.h"
 
 #include "WMEE/include/autoencoder.h"
+#include "WMEE/include/lstm.h"
 #include "WMEE/include/mlp.h"
 #include <torch/torch.h>
 
@@ -27,9 +28,22 @@ protected:
     std::shared_ptr<AE> _visual_nn = nullptr;
     //std::vector<decltype(_visual_nn)> _vec_visual_nn;
     std::map< std::pair<int,int>, decltype(_visual_nn)> _vec_visual_nn;
+
+    std::shared_ptr<MDNLSTM> _memory_nn = nullptr;
+    std::map< std::pair<int,int>, decltype(_memory_nn)> _vec_memory_nn;
+
     torch::Tensor _data;
-    size_t _dataIdx = 0;
-    std::unique_ptr<torch::optim::Adam> _optimizer = nullptr;
+    size_t _data_idx = 0;
+
+    std::vector<double> _last_outputs;
+    std::deque<std::vector<double>> _last_data_mem;
+    //torch::Tensor _last_data_mem;
+    //size_t _last_data_mem_idx = 0;
+
+    torch::Tensor _data_mem;
+    size_t _data_mem_idx = 0;
+
+//    std::unique_ptr<torch::optim::Adam> _optimizer = nullptr;
 
 private:
     std::map< std::pair<int,int>, int > _regretValueList;
@@ -76,6 +90,9 @@ protected:
     void createNN() override;
     double testAE(std::shared_ptr<AE> ae);
     void trainAE();
+
+    double testMM(std::shared_ptr<MDNLSTM> lstm);
+    void trainMM();
 };
 
 
