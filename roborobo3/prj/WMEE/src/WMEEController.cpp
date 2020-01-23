@@ -190,7 +190,6 @@ void WMEEController::stepController()
             nn->setInputs(z);
         }
 
-        // TODO memory model
         case 5: // MDNLSTM+AE+MLP
         {
             torch::NoGradGuard no_grad;
@@ -211,9 +210,9 @@ void WMEEController::stepController()
             auto z_tensor = vision_nn_output.z;
 
             std::vector<double> z;
-            size_t z_size = z_tensor.numel();
+            int64_t const z_size = z_tensor.numel();
             auto p = static_cast<float*>(z_tensor.storage().data());
-            for(size_t i=0; i<z_size; ++i) {
+            for(int64_t i=0; i<z_size; ++i) {
                 z.push_back(p[i]);
             }
             vec_mem = z;
@@ -225,29 +224,31 @@ void WMEEController::stepController()
                 _memory_nn->get()->reset_hidden();
             }
 
-            auto lstm_tensor_inputs = torch::empty({1, (long)z.size() + _nbOutputs});
+            // Build the inputs of the controllers from latent representation from the VAE and the hidden states of the LSTM
+            auto lstm_hidden = _memory_nn->get()->get_hidden();
+            int64_t const lstm_hidden_size = lstm_hidden.numel();
+            auto p2 = static_cast<float*>(lstm_hidden.storage().data());
+            for(int64_t i=0; i<lstm_hidden_size; ++i) {
+                z.push_back(p2[i]);
+            }
+            nn->setInputs(z);
+
+            // Update LSTM
+            auto lstm_tensor_inputs = torch::empty({1, z_size + _nbOutputs});
             auto lstm_tensor_inputs_access = lstm_tensor_inputs.accessor<float,2>();
-            for(size_t j = 0; j < z.size(); ++j) {
+            for(int64_t j = 0; j < z_size; ++j) {
                 if(isnormal(z[j]))
                     lstm_tensor_inputs_access[0][j] = z[j];
                 else
                     lstm_tensor_inputs_access[0][j] = 0.0;
             }
-            for(size_t j = 0; j < _nbOutputs; ++j) {
+            for(int64_t j = 0; j < _nbOutputs; ++j) {
                 if(isnormal(_last_outputs[j]))
                     lstm_tensor_inputs_access[0][j] = _last_outputs[j];
                 else
                     lstm_tensor_inputs_access[0][j] = 0.0;
             }
-            auto memory_nn_output = _memory_nn->get()->forward(lstm_tensor_inputs);
-            auto lstm_hidden = _memory_nn->get()->get_hidden();
-            size_t lstm_hidden_size = lstm_hidden.numel();
-            auto p2 = static_cast<float*>(lstm_hidden.storage().data());
-            for(size_t i=0; i<lstm_hidden_size; ++i) {
-                z.push_back(p2[i]);
-            }
-
-            nn->setInputs(z);
+            auto const memory_nn_output = _memory_nn->get()->forward(lstm_tensor_inputs);
         }
 
 		default:
@@ -509,14 +510,90 @@ void WMEEController::trainAE()
 //}
 
 
+torch::Tensor WMEEController::mdn_loss_function(torch::Tensor pi, torch::Tensor sigma, torch::Tensor mu, torch::Tensor y) {
+    float const epsilon = 1e-6;
+
+//    auto y2 = y.expand_as(sigma);
+    auto y2 = y.view({-1, WMEESharedData::dataMemNbSequences, 1, WMEESharedData::aeZDim});
+    auto var = sigma * sigma;
+    auto log_prob = -torch::pow(y2 - mu, 2.) / (2. * var) - var.log() - std::log(std::sqrt(2. * M_PI));
+    auto res = torch::exp(log_prob);
+
+//    std::cout << "DEBUGforward: sigma:";
+//    for(size_t i = 0; i < 4; ++i)
+//        std::cout << sigma.size(i) << ",";
+//    std::cout << std::endl;
+//
+//    //auto y2 = y.unsqueeze(1).expand_as(sigma);
+//    auto y2 = y.expand_as(sigma);
+//    auto res = 1. / std::sqrt(2. * M_PI) * torch::exp(-0.5 * torch::pow(((y2 - mu)/sigma), 2.)) / sigma;
+//    res = torch::prod(res, 2); // XXX Needed ?
+//
+//    std::cout << "DEBUGforward: res:";
+//    for(int64_t i = 0; i < 3; ++i)
+//        std::cout << res.size(i) << ",";
+//    std::cout << std::endl;
+//    std::cout << "DEBUGforward: pi:";
+//    for(int64_t i = 0; i < 3; ++i)
+//        std::cout << pi.size(i) << ",";
+//    std::cout << std::endl;
+
+    res = torch::sum(res * pi, 2);
+    res = -torch::log(res + epsilon);
+    //return torch::mean(res).item<double>();
+    return torch::mean(res);
+}
+
 
 double WMEEController::testMM(std::shared_ptr<MDNLSTM> lstm) {
-    // TODO
-    return 0.;
+    torch::NoGradGuard no_grad;
+    lstm->get()->eval();
+    lstm->get()->reset_hidden();
+    //size_t const dataset_size = WMEESharedData::dataBaseMaxCapacity;
+
+    // Forward
+    auto output = lstm->get()->forward(_data_mem);
+
+    // Compute target
+    // TODO target (same shape as sigma, but _data_mem(datasize=1000, nbsequences=2, latentvecsize+nboutputs=5+2), with only the last entry of each sequence, without the outputs)
+    // Shape: (1, 1000, 2, 5) -> (?=1, datasize, nbsequences, latentvecsize)
+    //auto target = output.sigma;
+    auto target = torch::empty({1, WMEESharedData::dataBaseMaxCapacity, 1, WMEESharedData::aeZDim});
+    auto target_access = target.accessor<float,4>();
+    auto data_access = _data_mem.accessor<float,3>();
+    for(int64_t i = 0; i < data_access.size(0); i++) {
+        for(int64_t j = 0; j < WMEESharedData::aeZDim; j++) {
+            target_access[0][i][0][j] = data_access[i][WMEESharedData::dataMemNbSequences-1][j];
+        }
+    }
+
+    return mdn_loss_function(output.pi, output.sigma, output.mu, target).item<double>();
 }
 
 void WMEEController::trainMM() {
-    // TODO
+    _memory_nn->get()->train();
+    // Reset gradients and hidden states
+    _memory_nn->get()->optim->zero_grad();
+    _memory_nn->get()->reset_hidden();
+
+    // Forward
+    auto output = _memory_nn->get()->forward(_data_mem);
+
+    // Compute target
+    auto target = torch::empty({1, WMEESharedData::dataBaseMaxCapacity, 1, WMEESharedData::aeZDim});
+    auto target_access = target.accessor<float,4>();
+    auto data_access = _data_mem.accessor<float,3>();
+    for(int64_t i = 0; i < data_access.size(0); i++) {
+        for(int64_t j = 0; j < WMEESharedData::aeZDim; j++) {
+            target_access[0][i][0][j] = data_access[i][WMEESharedData::dataMemNbSequences-1][j];
+        }
+    }
+
+    // Compute loss
+    auto const loss = mdn_loss_function(output.pi, output.sigma, output.mu, target); // XXX
+    //auto const loss = mdn_loss_function(output.pi, output.sigma, output.mu, output.sigma); // XXX
+    loss.backward();
+    _memory_nn->get()->optim->step();
 }
 
 
@@ -574,7 +651,7 @@ void WMEEController::stepEvolution()
         for(auto pae : _vec_memory_nn) {
             ae_losses[pae.first] = testMM(pae.second);
         }
-        //std::cout << "DEBUG losses:" << ae_losses << std::endl;
+        //std::cout << "DEBUG MM losses:" << ae_losses << std::endl;
 
         // Select the best-performing WM NNs
         auto const best_it = std::min_element(ae_losses.begin(), ae_losses.end(), [](auto const& l, auto const& r) { return l.second < r.second; });

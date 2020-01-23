@@ -93,6 +93,7 @@ protected:
 
     double testMM(std::shared_ptr<MDNLSTM> lstm);
     void trainMM();
+    torch::Tensor mdn_loss_function(torch::Tensor pi, torch::Tensor sigma, torch::Tensor mu, torch::Tensor y);
 };
 
 

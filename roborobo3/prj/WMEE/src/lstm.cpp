@@ -60,10 +60,10 @@ MDNLSTMOutput MDNLSTMImpl::forward(torch::Tensor x) {
     //std::cout << "DEBUGforward: sequence:" << sequence << " _nb_gaussians:" << _nb_gaussians << " _z_dim:" << _z_dim << std::endl;
     pi = pi.view({-1, sequence, _nb_gaussians, _z_dim});
     pi = torch::softmax(pi, 2);
-    pi /= _temperature;
+    pi = pi / _temperature;
 
     auto sigma = torch::exp(z_sigma->forward(z)).view({-1, sequence, _nb_gaussians, _z_dim});
-    sigma *= std::pow(_temperature, 0.5);
+    sigma = sigma * std::pow(_temperature, 0.5);
 
     auto mu = z_mu->forward(z).view({-1, sequence, _nb_gaussians, _z_dim});
     return {pi, sigma, mu};
