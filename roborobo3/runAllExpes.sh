@@ -14,7 +14,8 @@ declare -a configs
 
 #configs+=("wmee-401600-task1_16sensors-baseline 10")
 #configs+=("wmee-401600-task1_16sensors-WMAE4000x10x1e-4x30x10x134000 10")
-configs+=("wmee-401600-task1-WMAEMM4000x10x10x1e-4x1e-4x30x10x134000x268000 10")
+#configs+=("wmee-401600-task1-WMAEMM4000x10x10x1e-4x1e-4x30x10x134000x268000 10")
+configs+=("wmee-401600-WMAEMM4000x10x10x1e-4x1e-4x30x10x134000x268000 10")
 
 
 printf -v allParams "%s\n" "${configs[@]}"
