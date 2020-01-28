@@ -47,46 +47,50 @@ protected:
 
 private:
     std::map< std::pair<int,int>, int > _regretValueList;
-    
+
 public:
-    
+
     WMEEController(RobotWorldModel *wm);
     ~WMEEController();
-    
+
     double getFitness() override;
-    
+
     int nbForagedItemType0;
     int nbForagedItemType1;
-    
+
     int* lastSeenObjectIdPerSensorList = NULL;
     //int lastSeenObjectIdOnFloorSensor = 0;
-    
+
     int regret;
-    
+
+    double visual_nn_loss = 1.;
+    double memory_nn_loss = 1.;
+
+
 protected:
-    
+
     void initController() override;
     void initEvolution() override;
-    
+
     void step() override;
     void stepController() override;
     void stepEvolution() override;
-    
+
     void performSelection() override;
     void performVariation() override;
-    
+
     void broadcastGenome() override;
-    
+
     void resetFitness() override;
     void updateFitness() override;
-    
+
     void logCurrentState() override;
-    
+
     bool sendGenome( TemplateEEController* __targetRobotController ) override;
     bool receiveGenome( Packet* p ) override;
-    
+
     void selectNaiveMO();
-    
+
     void createNN() override;
     double testAE(std::shared_ptr<AE> ae);
     void trainAE();

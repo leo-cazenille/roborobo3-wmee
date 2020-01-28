@@ -621,7 +621,7 @@ void WMEEController::stepEvolution()
             ////ae_losses.push_back(res.first);
             ////ae_acc.push_back(res.second);
         }
-        //std::cout << "DEBUG losses:" << ae_losses << std::endl;
+        //std::cout << "DEBUG AE losses:" << ae_losses << std::endl;
 
         // Select the best-performing WM NNs
         auto const best_it = std::min_element(ae_losses.begin(), ae_losses.end(), [](auto const& l, auto const& r) { return l.second < r.second; });
@@ -630,6 +630,7 @@ void WMEEController::stepEvolution()
         //std::cout << "DEBUG best_idx: " << best_idx << std::endl;
         //_visual_nn = _vec_visual_nn[best_idx];
         _visual_nn = _vec_visual_nn[best_it->first];
+        visual_nn_loss = ae_losses[best_it->first];
         //std::cout << "DEBUG best_idx: " << best_it->first << ": " << best_it->second << std::endl;
 
         // Get rid of the other WM NNs
@@ -647,15 +648,16 @@ void WMEEController::stepEvolution()
         }
 
         // Assess the performance of every stored world model NNs
-        std::map< std::pair<int,int>, double > ae_losses;
+        std::map< std::pair<int,int>, double > mm_losses;
         for(auto pae : _vec_memory_nn) {
-            ae_losses[pae.first] = testMM(pae.second);
+            mm_losses[pae.first] = testMM(pae.second);
         }
-        //std::cout << "DEBUG MM losses:" << ae_losses << std::endl;
+        //std::cout << "DEBUG MM losses:" << mm_losses << std::endl;
 
         // Select the best-performing WM NNs
-        auto const best_it = std::min_element(ae_losses.begin(), ae_losses.end(), [](auto const& l, auto const& r) { return l.second < r.second; });
+        auto const best_it = std::min_element(mm_losses.begin(), mm_losses.end(), [](auto const& l, auto const& r) { return l.second < r.second; });
         _memory_nn = _vec_memory_nn[best_it->first];
+        memory_nn_loss = mm_losses[best_it->first];
 
         // Get rid of the other WM NNs
         _vec_memory_nn.clear();

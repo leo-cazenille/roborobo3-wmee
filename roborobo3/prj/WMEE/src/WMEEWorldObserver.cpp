@@ -44,7 +44,7 @@ WMEEWorldObserver::WMEEWorldObserver( World* world ) : TemplateEEWorldObserver( 
     gProperties.checkAndGetPropertyValue("mdnlstmTemperature",&WMEESharedData::mdnlstmTemperature,true);
     
     gLitelogManager->write("# lite logger\n");
-    gLitelogManager->write("# [0]:generation,[1]:iteration,[2]:populationSize,[3]:minFitness,[4]:maxFitness,[5]:avgFitnessNormalized,[6]:sumOfFitnesses,[7]:foragingBalance,[8]:avg_countForagedItemType0,[9]:stddev_countForagedItemType0, [10]:avg_countForagedItemType1,[11]:stddev_countForagedItemType1,[12]:globalWelfare,[13]minGenomeReservoirSize,[14]maxGenomeReservoirSize,[15]avgGenomeReservoirSize,[16]avgForagingBalancePerRobot,[17]stdForagingBalancePerRobot,[18]activeCountWithForaging.\n");
+    gLitelogManager->write("# [0]:generation,[1]:iteration,[2]:populationSize,[3]:minFitness,[4]:maxFitness,[5]:avgFitnessNormalized,[6]:sumOfFitnesses,[7]:foragingBalance,[8]:avg_countForagedItemType0,[9]:stddev_countForagedItemType0, [10]:avg_countForagedItemType1,[11]:stddev_countForagedItemType1,[12]:globalWelfare,[13]minGenomeReservoirSize,[14]maxGenomeReservoirSize,[15]avgGenomeReservoirSize,[16]avgForagingBalancePerRobot,[17]stdForagingBalancePerRobot,[18]activeCountWithForaging,[19]minVisualModelLosses,[20]maxVisualModelLosses,[21]avgVisualModelLosses,[22]minMemoryModelLosses,[23]maxMemoryModelLosses,[24]avgMemoryModelLosses.\n");
     gLitelogManager->flush();
 }
 
@@ -152,6 +152,13 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
     
     double avgForagingBalancePerRobot = 0;
     double stddev_activeCountWithForaging = 0;
+
+    double sumVisualModelLosses = 0.;
+    double minVisualModelLosses = DBL_MAX;
+    double maxVisualModelLosses = -DBL_MAX;
+    double sumMemoryModelLosses = 0.;
+    double minMemoryModelLosses = DBL_MAX;
+    double maxMemoryModelLosses = -DBL_MAX;
     
     for ( int i = 0 ; i != gNbOfRobots ; i++ )
     {
@@ -201,6 +208,18 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
                     if ( maxGenomeReservoirSize < genomeReservoirSize )
                         maxGenomeReservoirSize = genomeReservoirSize;
             }
+
+            // Losses
+            sumVisualModelLosses += ctl->visual_nn_loss;
+            if(minVisualModelLosses > ctl->visual_nn_loss)
+                minVisualModelLosses = ctl->visual_nn_loss;
+            if(maxVisualModelLosses < ctl->visual_nn_loss)
+                maxVisualModelLosses = ctl->visual_nn_loss;
+            sumMemoryModelLosses = ctl->memory_nn_loss;
+            if(minMemoryModelLosses > ctl->memory_nn_loss)
+                minMemoryModelLosses = ctl->memory_nn_loss;
+            if(maxMemoryModelLosses < ctl->memory_nn_loss)
+                maxMemoryModelLosses = ctl->memory_nn_loss;
         }
     }
     
@@ -220,6 +239,9 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
     }
     else
         avgFitnessNormalized = sumOfFitnesses/activeCount;
+
+    double const avgVisualModelLosses = sumVisualModelLosses / activeCount;
+    double const avgMemoryModelLosses = sumMemoryModelLosses / activeCount;
     
     // display lightweight logs for easy-parsing
     std::string sLitelog =
@@ -290,6 +312,20 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
     + std::to_string(stddev_activeCountWithForaging)
     + ","
     + std::to_string(activeCountWithForaging);
+
+    // Losses
+    sLitelog += ","
+    + std::to_string(minVisualModelLosses)
+    + ","
+    + std::to_string(maxVisualModelLosses)
+    + ","
+    + std::to_string(avgVisualModelLosses)
+    + ","
+    + std::to_string(minMemoryModelLosses)
+    + ","
+    + std::to_string(maxMemoryModelLosses)
+    + ","
+    + std::to_string(avgMemoryModelLosses);
     
     gLitelogManager->write(sLitelog);
     gLitelogFile << std::endl; // flush file output (+ "\n")
@@ -302,7 +338,8 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
     
     if ( gVerbose && localVerbose )
     {
-        std::cout << "[ gen:" << (gWorld->getIterations()/TemplateEESharedData::gEvaluationTime) << "\tit:" << gWorld->getIterations() << "\tpop:" << activeCount << "\tminFitness:" << minFitness << "\tmaxFitness:" << maxFitness << "\tavgFitnessNormalized:" << avgFitnessNormalized << "\tglobalWelfare:" << (countForagedItemType0+countForagedItemType1) << " ]\n";
+        //std::cout << "[ gen:" << (gWorld->getIterations()/TemplateEESharedData::gEvaluationTime) << "\tit:" << gWorld->getIterations() << "\tpop:" << activeCount << "\tminFitness:" << minFitness << "\tmaxFitness:" << maxFitness << "\tavgFitnessNormalized:" << avgFitnessNormalized << "\tglobalWelfare:" << (countForagedItemType0+countForagedItemType1) << " ]\n";
+        std::cout << "[ gen:" << (gWorld->getIterations()/TemplateEESharedData::gEvaluationTime) << "\tit:" << gWorld->getIterations() << "\tpop:" << activeCount << "\tminFitness:" << minFitness << "\tmaxFitness:" << maxFitness << "\tavgFitnessNormalized:" << avgFitnessNormalized << "\tglobalWelfare:" << (countForagedItemType0+countForagedItemType1) << "\tminVisualModelLosses:" << minVisualModelLosses << "\tmaxVisualModelLosses:" << maxVisualModelLosses << "\tavgVisualModelLosses:" << avgVisualModelLosses << "\tminMemoryModelLosses:" << minMemoryModelLosses << "\tmaxMemoryModelLosses:" << maxMemoryModelLosses << "\tavgMemoryModelLosses:" << avgMemoryModelLosses << " ]\n";
     }
 
 }
