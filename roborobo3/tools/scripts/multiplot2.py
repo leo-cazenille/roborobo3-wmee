@@ -89,11 +89,11 @@ if len(args.filenames) == 1:
 else:
     # compile data from multiple files and display boxplots
     
-    if len(lines)<5:
-        print "[ERROR] at least 5 data file are required to trace boxplots. Stop."
-        quit()
-    elif len(lines)<11:
-        print "[WARNING] at least 11 data file are recommended to trace boxplots. Continue."
+#    if len(lines)<5:
+#        print "[ERROR] at least 5 data file are required to trace boxplots. Stop."
+#        quit()
+#    elif len(lines)<11:
+#        print "[WARNING] at least 11 data file are recommended to trace boxplots. Continue."
     
     for i in range (1,len(lines)):
         if len(lines[0]) != len(lines[i]):
