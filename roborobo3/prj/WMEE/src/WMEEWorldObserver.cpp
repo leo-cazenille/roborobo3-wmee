@@ -215,7 +215,7 @@ void WMEEWorldObserver::monitorPopulation( bool localVerbose )
                 minVisualModelLosses = ctl->visual_nn_loss;
             if(maxVisualModelLosses < ctl->visual_nn_loss)
                 maxVisualModelLosses = ctl->visual_nn_loss;
-            sumMemoryModelLosses = ctl->memory_nn_loss;
+            sumMemoryModelLosses += ctl->memory_nn_loss;
             if(minMemoryModelLosses > ctl->memory_nn_loss)
                 minMemoryModelLosses = ctl->memory_nn_loss;
             if(maxMemoryModelLosses < ctl->memory_nn_loss)

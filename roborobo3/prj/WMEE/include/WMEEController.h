@@ -43,6 +43,9 @@ protected:
     torch::Tensor _data_mem;
     size_t _data_mem_idx = 0;
 
+    bool _enable_visual_nn_training = true;
+    bool _enable_memory_nn_training = false;
+
 //    std::unique_ptr<torch::optim::Adam> _optimizer = nullptr;
 
 private:

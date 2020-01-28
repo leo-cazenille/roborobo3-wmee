@@ -602,7 +602,7 @@ void WMEEController::stepEvolution()
 {
     TemplateEEController::stepEvolution();
 
-    if( _data_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
+    if( _enable_visual_nn_training && _data_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
         // Add own WM NN to _vec_visual_nn
         //std::cout << "DEBUG stepEvolution _vec_visual_nn.size()=" << _vec_visual_nn.size() << std::endl;
         if (_vec_visual_nn.size() == 0) {
@@ -640,7 +640,7 @@ void WMEEController::stepEvolution()
         trainAE();
     }
 
-    if( _data_mem_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
+    if( _enable_memory_nn_training && _data_mem_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
         // Add own WM NN to _vec_memory_nn
         //std::cout << "DEBUG stepEvolution _vec_memory_nn.size()=" << _vec_memory_nn.size() << std::endl;
         if (_vec_memory_nn.size() == 0) {
@@ -905,6 +905,8 @@ void WMEEController::createNN()
         {
             // AE + MLP
             nn = new MLP(_parameters, (size_t)WMEESharedData::aeZDim, _nbOutputs, *(_nbNeuronsPerHiddenLayer));
+            _enable_visual_nn_training = true;
+            _enable_memory_nn_training = false;
             break;
         }
         case 5:
@@ -912,6 +914,8 @@ void WMEEController::createNN()
             // TODO
             // MDNLSTM + AE + MLP
             nn = new MLP(_parameters, (size_t)WMEESharedData::aeZDim + (size_t)WMEESharedData::mdnlstmHDim, _nbOutputs, *(_nbNeuronsPerHiddenLayer));
+            _enable_visual_nn_training = false;
+            _enable_memory_nn_training = true;
             break;
         }
 
