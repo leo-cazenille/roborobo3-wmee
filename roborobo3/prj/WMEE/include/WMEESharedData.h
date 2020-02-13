@@ -44,6 +44,8 @@ public:
     static int mdnlstmHiddenDim;
     static int mdnlstmNbLayers;
     static double mdnlstmTemperature;
+
+    static int stopTrainingAfterIt;
 }; 
 
 #endif

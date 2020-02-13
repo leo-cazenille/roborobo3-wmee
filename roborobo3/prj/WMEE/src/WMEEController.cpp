@@ -602,6 +602,11 @@ void WMEEController::stepEvolution()
 {
     TemplateEEController::stepEvolution();
 
+    if(WMEESharedData::stopTrainingAfterIt > 0 && gWorld->getIterations() >= WMEESharedData::stopTrainingAfterIt) {
+        _enable_memory_nn_training = false;
+        _enable_visual_nn_training = false;
+    }
+
     if( _enable_visual_nn_training && _data_idx > (size_t)WMEESharedData::dataBaseMaxCapacity && gWorld->getIterations() > 0 && gWorld->getIterations() % TemplateEESharedData::gEvaluationTime == 0 ) {
         // Add own WM NN to _vec_visual_nn
         //std::cout << "DEBUG stepEvolution _vec_visual_nn.size()=" << _vec_visual_nn.size() << std::endl;

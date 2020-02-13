@@ -43,4 +43,5 @@ int WMEESharedData::mdnlstmNbSamples = 0;
 int WMEESharedData::mdnlstmHiddenDim = 0;
 int WMEESharedData::mdnlstmNbLayers = 0;
 double WMEESharedData::mdnlstmTemperature = 0;
+int WMEESharedData::stopTrainingAfterIt = 0;
 
