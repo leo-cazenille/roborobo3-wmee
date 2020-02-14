@@ -10,6 +10,8 @@ declare -a configs
 #configs+=("wmee-401600-WMAE4000x10x1e-4x30x10x134000 20")
 
 #configs+=("wmee-401600-task1-baseline 20")
+configs+=("wmee-2001600-task1-baseline 20")
+
 #configs+=("wmee-401600-task1-WMAE4000x10x1e-4x30x10x134000 20")
 
 #configs+=("wmee-401600-task1_16sensors-baseline 10")
@@ -25,7 +27,7 @@ declare -a configs
 #configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600 2")
 #configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600-6x1x5x10x2x1.0 2")
 #configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600x1751600-6x1x5x10x2x1.0 2")
-configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600x1751600-6x1x5x10x2x1.0-4x5 2")
+#configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600x1751600-6x1x5x10x2x1.0-4x5 2")
 
 
 printf -v allParams "%s\n" "${configs[@]}"
