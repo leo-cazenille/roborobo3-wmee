@@ -29,7 +29,7 @@ declare -a configs
 
 
 #configs+=("wmee-2001600-task1-baseline 20")
-configs+=("wmee-2001600-task1-WMAE2000x10x1e-4x30x10x1751600-4x5 2")
+configs+=("wmee-2001600-task1-WMAE2000x10x1e-4x30x10x1751600-4x5 4")
 #configs+=("wmee-2001600-task1-WMAEMM2000x10x10x1e-4x1e-4x30x10x257600x401600x1751600-6x1x5x10x2x1.0-4x5 2")
 
 
