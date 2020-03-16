@@ -83,6 +83,7 @@ void WMEEWorldObserver::initPre()
 
             case 1:
             case 2:
+            case 3:
             {
                 object->setRegion(0,1); // whole arena
                 if ( i < threshold )
