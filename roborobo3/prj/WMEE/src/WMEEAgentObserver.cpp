@@ -33,7 +33,8 @@ void WMEEAgentObserver::stepPre()
     // * update fitness (if needed)
     if ( _wm->isAlive() && PhysicalObject::isInstanceOf(_wm->getGroundSensorValue()) )
     {
-        if ( WMEESharedData::foragingTask != 0 && WMEESharedData::foragingTask != 1 && WMEESharedData::foragingTask != 2 )
+        //if ( WMEESharedData::foragingTask != 0 && WMEESharedData::foragingTask != 1 && WMEESharedData::foragingTask != 2 )
+        if ( WMEESharedData::foragingTask > 3)
         {
             std::cerr << "[ERROR] gForagingTask value is unknown. Exiting.\n";
             exit (-1);
@@ -59,6 +60,13 @@ void WMEEAgentObserver::stepPre()
                 } else {
                     _wm->_fitnessValue = 0;
                 }
+            } else if ( WMEESharedData::foragingTask == 3 ) {
+                if ( ctl->nbForagedItemType1 - ctl->nbForagedItemType0 >= 0 ) {
+                    _wm->_fitnessValue += 1;
+                    ctl->nbForagedItemType0++;
+                } else {
+                    _wm->_fitnessValue -= 1;
+                }
             } else {
                 ctl->nbForagedItemType0++;
             }
@@ -76,7 +84,13 @@ void WMEEAgentObserver::stepPre()
                 } else {
                     _wm->_fitnessValue = 0;
                 }
-
+            } else if ( WMEESharedData::foragingTask == 3 ) {
+                if ( ctl->nbForagedItemType0 - ctl->nbForagedItemType1 >= 0 ) {
+                    _wm->_fitnessValue += 1;
+                    ctl->nbForagedItemType1++;
+                } else {
+                    _wm->_fitnessValue -= 1;
+                }
             } else {
                 ctl->nbForagedItemType1++;
             }
